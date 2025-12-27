@@ -15,6 +15,11 @@ from urllib.parse import urlparse
 import mlflow
 from mlflow.models import infer_signature
 import mlflow.sklearn
+import dagshub
+dagshub.init(repo_owner="Inder-26",
+             repo_name="mlflow_dagshub_winequality",
+             mlflow=True)
+
 
 import logging
 
@@ -55,8 +60,17 @@ if __name__ == "__main__":
 
     alpha = float(sys.argv[1]) if len(sys.argv) > 1 else 0.5
     l1_ratio = float(sys.argv[2]) if len(sys.argv) > 2 else 0.5
+    remote_server_uri = "https://dagshub.com/Inder-26/mlflow_dagshub_winequality.mlflow"
+    mlflow.set_tracking_uri(remote_server_uri)
+    mlflow.set_experiment("wine-quality-elasticnet")
 
     with mlflow.start_run():
+        mlflow.log_param("dataset", "winequality-red")
+        mlflow.log_param("rows", data.shape[0])
+        mlflow.log_param("columns", data.shape[1])
+
+        # log requirements file (file must exist)
+        mlflow.log_artifact("requirements.txt")
         lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
         lr.fit(train_x, train_y)
 
@@ -78,11 +92,6 @@ if __name__ == "__main__":
         predictions = lr.predict(train_x)
         signature = infer_signature(train_x, predictions)
 
-        ## For Remote server only(DAGShub)
-
-        remote_server_uri="https://dagshub.com/Inder-26/mlflow_dagshub_winequality.mlflow"
-        mlflow.set_tracking_uri(remote_server_uri)
-
         tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
 
         # Model registry does not work with file store
@@ -92,7 +101,11 @@ if __name__ == "__main__":
             # please refer to the doc for more information:
             # https://mlflow.org/docs/latest/model-registry.html#api-workflow
             mlflow.sklearn.log_model(
-                lr, "model", registered_model_name="ElasticnetWineModel", signature=signature
+                lr,
+                name="model",
+                signature=signature,
+                input_example=train_x.iloc[:2]
             )
+
         else:
             mlflow.sklearn.log_model(lr, "model")
