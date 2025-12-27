@@ -16,9 +16,14 @@ import mlflow
 from mlflow.models import infer_signature
 import mlflow.sklearn
 import dagshub
-dagshub.init(repo_owner="Inder-26",
-             repo_name="mlflow_dagshub_winequality",
+dagshub.init(repo_owner='inder-26',
+             repo_name='mlflow_dagshub_winequality',
              mlflow=True)
+
+import mlflow
+with mlflow.start_run():
+  mlflow.log_param('parameter name', 'value')
+  mlflow.log_metric('metric name', 1)
 
 
 import logging
