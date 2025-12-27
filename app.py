@@ -15,6 +15,8 @@ from urllib.parse import urlparse
 import mlflow
 from mlflow.models import infer_signature
 import mlflow.sklearn
+from dotenv import load_dotenv
+load_dotenv()
 import dagshub
 dagshub.init(repo_owner='inder-26',
              repo_name='mlflow_dagshub_winequality',
